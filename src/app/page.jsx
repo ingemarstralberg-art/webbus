@@ -45,109 +45,57 @@ export default function HomePage() {
           <div className="flex flex-col lg:flex-row items-center gap-space-2xl lg:gap-space-3xl">
 
             {/* Left: Editorial Content */}
-
-            <div className="flex-1 flex flex-col items-start text-left">
-
+            <div className="flex-1 flex flex-col items-start text-left w-full min-w-0 max-w-full">
               {/* Top Badge */}
-
-              <div className="inline-flex items-center gap-space-2xs py-space-2xs px-space-md rounded-full bg-surface-container-low shadow-sm mb-space-lg">
-
-                <span className="text-primary font-semibold text-label-sm font-label-sm tracking-wide flex items-center gap-1.5">
-
-                  <span className="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
-
-                  ⚡ Kiruna · Framtidssäkrad IT & AI-transformation
-
+              <div className="inline-flex items-center gap-space-2xs py-1 px-3 sm:py-space-2xs sm:px-space-md rounded-full bg-surface-container-low shadow-sm mb-space-md sm:mb-space-lg max-w-full">
+                <span className="text-primary font-semibold text-[11px] sm:text-label-sm font-label-sm tracking-wide flex items-center gap-1.5 truncate">
+                  <span className="w-2 h-2 rounded-full bg-secondary shrink-0 animate-ping"></span>
+                  <span className="truncate">⚡ Kiruna · Framtidssäkrad IT & AI-transformation</span>
                 </span>
-
               </div>
-
-
 
               {/* Main Heading */}
-
-              <h1 className="font-display-hero text-display-hero text-on-surface tracking-tight mb-space-md">
-
+              <h1 className="font-display-hero text-[30px] leading-[38px] sm:text-[38px] sm:leading-[46px] lg:text-display-hero lg:leading-[64px] text-on-surface tracking-tight mb-space-md break-words max-w-full">
                 Öka företagets produktivitet med <span className="text-primary">AI</span> & Skräddarsydd Systemutveckling
-
               </h1>
 
-
-
               {/* Subtitle */}
-
-              <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl mb-space-xl">
-
+              <p className="font-body-md sm:font-body-lg text-body-md sm:text-body-lg text-on-surface-variant max-w-xl mb-space-lg sm:mb-space-xl">
                 Webbus hjälper verksamheter att omsätta nästa generations AI i praktisk nytta. Från implementering av marknadsledande AI-modeller till robust, AI-driven mjukvaru- och webbutveckling.
-
               </p>
 
-
-
               {/* CTAs */}
-
-              <div className="flex flex-wrap items-center gap-space-md mb-space-xl w-full sm:w-auto">
-
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-sm sm:gap-space-md mb-space-lg sm:mb-space-xl w-full sm:w-auto">
                 <Link
-
                   href="/tjanster"
-
-                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-space-xs py-space-sm px-space-xl rounded-full bg-primary hover:bg-primary-container text-on-primary font-title-md text-title-md shadow-md transition-all active:scale-[0.98]"
-
+                  className="inline-flex items-center justify-center gap-space-xs py-space-sm px-space-md sm:px-space-xl rounded-full bg-primary hover:bg-primary-container text-on-primary font-title-md text-title-md shadow-md transition-all active:scale-[0.98] text-center"
                 >
-
                   <span>Utforska våra AI-processer</span>
-
                   <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-
                 </Link>
-
                 <button
-
                   onClick={() => openBooking()}
-
-                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-space-xs py-space-sm px-space-xl rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-all border border-surface-container-highest"
-
+                  className="inline-flex items-center justify-center gap-space-xs py-space-sm px-space-md sm:px-space-xl rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-all border border-surface-container-highest text-center"
                 >
-
                   <span>Boka förutsättningslöst möte</span>
-
                 </button>
-
               </div>
-
-
 
               {/* Key Attribute Pills */}
-
-              <div className="flex flex-wrap items-center gap-space-xs pt-space-xs">
-
-                <div className="flex items-center gap-space-2xs py-1.5 px-space-sm rounded-full bg-surface-container-lowest shadow-sm text-on-surface font-label-md text-label-md border border-outline-variant/30">
-
-                  <span className="material-symbols-outlined text-primary text-[16px]">verified</span>
-
+              <div className="flex flex-wrap items-center gap-2 sm:gap-space-xs pt-space-2xs sm:pt-space-xs w-full">
+                <div className="flex items-center gap-1.5 py-1.5 px-2.5 sm:px-space-sm rounded-full bg-surface-container-lowest shadow-sm text-on-surface text-xs sm:text-label-md font-label-md border border-outline-variant/30">
+                  <span className="material-symbols-outlined text-primary text-[16px] shrink-0">verified</span>
                   <span>100% Nöjd-kundgaranti</span>
-
                 </div>
-
-                <div className="flex items-center gap-space-2xs py-1.5 px-space-sm rounded-full bg-surface-container-lowest shadow-sm text-on-surface font-label-md text-label-md border border-outline-variant/30">
-
-                  <span className="material-symbols-outlined text-primary text-[16px]">pin_drop</span>
-
+                <div className="flex items-center gap-1.5 py-1.5 px-2.5 sm:px-space-sm rounded-full bg-surface-container-lowest shadow-sm text-on-surface text-xs sm:text-label-md font-label-md border border-outline-variant/30">
+                  <span className="material-symbols-outlined text-primary text-[16px] shrink-0">pin_drop</span>
                   <span>Lokal närvaro i Kiruna</span>
-
                 </div>
-
-                <div className="flex items-center gap-space-2xs py-1.5 px-space-sm rounded-full bg-surface-container-lowest shadow-sm text-on-surface font-label-md text-label-md border border-outline-variant/30">
-
-                  <span className="material-symbols-outlined text-primary text-[16px]">support_agent</span>
-
+                <div className="flex items-center gap-1.5 py-1.5 px-2.5 sm:px-space-sm rounded-full bg-surface-container-lowest shadow-sm text-on-surface text-xs sm:text-label-md font-label-md border border-outline-variant/30">
+                  <span className="material-symbols-outlined text-primary text-[16px] shrink-0">support_agent</span>
                   <span>Direktkontakt med expert</span>
-
                 </div>
-
               </div>
-
             </div>
 
 
