@@ -13,17 +13,18 @@ import RemoteSupportModal from '../components/RemoteSupportModal';
 
 
 export const metadata = {
-
   title: 'Webbus · Modern AI-implementering & Systemutveckling i Kiruna',
-
   description: 'Webbus hjälper företag att omsätta modern AI (Claude, Gemini, GPT) och robust mjukvaruutveckling i mätbar affärsnytta. Med lokal Kirunanärvaro och 100% nöjd-kundgaranti.',
-
   icons: {
-
-    icon: '/images/logo.png',
-
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
-
 };
 
 
