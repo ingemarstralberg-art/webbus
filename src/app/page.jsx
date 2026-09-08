@@ -10,7 +10,13 @@ import Image from 'next/image';
 
 import { useModal } from '../context/ModalContext';
 
-
+const aiLogos = [
+  { name: 'Anthropic Claude', src: '/images/logos/claude-standard.png', width: 334, height: 72 },
+  { name: 'OpenAI ChatGPT', src: '/images/logos/chatgpt-standard.png', width: 284, height: 72 },
+  { name: 'Google Gemini', src: '/images/logos/gemini-standard.png', width: 319, height: 72 },
+  { name: 'xAI Grok', src: '/images/logos/grok-standard.png', width: 198, height: 72 },
+  { name: 'Microsoft Copilot', src: '/images/logos/copilot-standard.png', width: 341, height: 72 },
+];
 
 export default function HomePage() {
 
@@ -159,133 +165,74 @@ export default function HomePage() {
 
 
                 {/* Elevated Mockup Card */}
-
-                <div className="relative bg-surface-container-lowest rounded-2xl overflow-hidden shadow-xl p-space-xs border border-outline-variant/40">
-
+                <div className="relative bg-surface-container-lowest rounded-2xl shadow-xl p-space-xs border border-outline-variant/40">
                   {/* Window top-bar simulator */}
-
                   <div className="flex items-center justify-between px-space-md py-space-xs bg-surface-container-low rounded-t-xl mb-space-xs">
-
                     <div className="flex items-center gap-1.5">
-
                       <div className="w-3 h-3 rounded-full bg-error/70"></div>
-
                       <div className="w-3 h-3 rounded-full bg-secondary-container"></div>
-
                       <div className="w-3 h-3 rounded-full bg-primary/70"></div>
-
                     </div>
-
                     <div className="flex items-center gap-space-2xs font-code-mono text-body-sm text-on-surface-variant">
-
                       <span className="material-symbols-outlined text-[14px]">terminal</span>
-
                       <span>kiruna-node-01.webbus.internal</span>
-
                     </div>
-
                     <div className="flex items-center gap-1">
-
                       <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-
                       <span className="font-label-sm text-label-sm text-primary font-semibold">SYNCED</span>
-
                     </div>
-
                   </div>
-
-
 
                   {/* Main Hero Image */}
-
                   <div className="relative rounded-xl overflow-hidden aspect-[16/10]">
-
                     <Image
-
                       src="/images/workspace_kiruna.jpg"
-
                       alt="Webbus Kiruna Tech Workspace med subarktisk utsikt och modern AI-infrastruktur"
-
                       fill
-
                       className="object-cover"
-
                       priority
-
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-inverse-surface/20 to-transparent"></div>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/70 via-transparent to-transparent"></div>
+                    {/* Top Right Live Telemetry */}
+                    <div className="absolute top-space-sm right-space-sm py-1 px-space-xs rounded-lg bg-surface-container-lowest/90 backdrop-blur-md text-on-surface font-code-mono text-body-sm shadow-sm flex items-center gap-1.5 border border-outline-variant/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                      <span>Latency: 4.2ms</span>
+                    </div>
 
+                    {/* Bottom Left Operations Info */}
                     <div className="absolute bottom-space-md left-space-md right-space-md flex items-end justify-between">
-
                       <div className="text-on-primary">
-
                         <p className="font-label-sm text-label-sm uppercase tracking-widest text-primary-fixed-dim">Operations Center</p>
-
-                        <p className="font-title-md text-title-md font-semibold">Kiruna Arctic Lab · 67.8558° N</p>
-
+                        <p className="font-title-md text-title-md font-semibold text-white">Kiruna Arctic Lab · 67.8558° N</p>
                       </div>
-
-                      <div className="py-1 px-space-xs rounded-lg bg-surface-container-lowest/85 backdrop-blur-md text-on-surface font-code-mono text-body-sm shadow-sm">
-
-                        Latency: 4.2ms
-
-                      </div>
-
                     </div>
-
                   </div>
 
-
-
-                  {/* Floating Live Badge 1 (Top Left Overlap) */}
-
-                  <div className="absolute -top-4 -left-4 sm:-left-6 bg-surface-container-lowest/95 backdrop-blur-md p-space-sm rounded-xl shadow-xl flex items-center gap-space-sm max-w-xs border border-outline-variant/30">
-
-                    <div className="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
-
+                  {/* Floating Live Badge 1 (Left Overlap) */}
+                  <div className="absolute top-16 -left-3 sm:-left-6 bg-surface-container-lowest/95 backdrop-blur-md p-space-sm sm:px-space-md sm:py-space-sm rounded-xl shadow-xl flex items-center gap-space-sm max-w-xs border border-outline-variant/30 z-10">
+                    <div className="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0">
                       <span className="material-symbols-outlined text-[24px]">psychology</span>
-
                     </div>
-
-                    <div>
-
+                    <div className="whitespace-nowrap">
                       <div className="flex items-center gap-1">
-
                         <span className="w-2 h-2 rounded-full bg-primary"></span>
-
                         <p className="font-label-sm text-label-sm text-primary font-semibold">LLM Orchestration</p>
-
                       </div>
-
                       <p className="font-title-md text-body-sm font-bold text-on-surface">Claude & GPT Enterprise</p>
-
                     </div>
-
                   </div>
-
-
 
                   {/* Floating Live Badge 2 (Bottom Right Overlap) */}
-
-                  <div className="absolute -bottom-4 -right-3 sm:-right-6 bg-surface-container-lowest/95 backdrop-blur-md p-space-sm rounded-xl shadow-xl flex items-center gap-space-sm border border-outline-variant/30">
-
-                    <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
-
+                  <div className="absolute -bottom-5 -right-2 sm:-right-4 bg-surface-container-lowest/95 backdrop-blur-md p-space-sm sm:px-space-md sm:py-space-sm rounded-xl shadow-xl flex items-center gap-space-sm border border-outline-variant/30 z-10">
+                    <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary shrink-0">
                       <span className="material-symbols-outlined text-[24px]">rocket_launch</span>
-
                     </div>
-
-                    <div>
-
+                    <div className="whitespace-nowrap pr-1">
                       <p className="font-label-sm text-label-sm text-on-surface-variant font-medium">Genomsnittlig leverans</p>
-
-                      <p className="font-headline-sm text-headline-sm font-bold text-primary">2.4x Högre Takt</p>
-
+                      <p className="font-headline-sm text-headline-sm font-bold text-primary tracking-tight">2.4x Högre Takt</p>
                     </div>
-
                   </div>
-
                 </div>
 
               </div>
@@ -506,6 +453,35 @@ export default function HomePage() {
 
             </div>
 
+          </div>
+
+          {/* Scrolling AI Ecosystem Logo Marquee */}
+          <div className="mt-space-2xl pt-space-xl border-t border-surface-container-high/60">
+            <div className="text-center mb-space-md">
+              <span className="font-label-sm text-label-sm text-on-surface-variant/80 uppercase tracking-widest font-semibold">
+                Ledande AI-modeller & plattformar vi integrerar
+              </span>
+            </div>
+
+            {/* Marquee Wrapper with soft edge fades */}
+            <div className="relative w-full overflow-hidden py-2 [mask-image:linear-gradient(to_right,transparent_0%,black_8%,black_92%,transparent_100%)]">
+              <div className="flex gap-6 sm:gap-8 w-max animate-marquee py-2">
+                {[...aiLogos, ...aiLogos, ...aiLogos, ...aiLogos].map((logo, idx) => (
+                  <div
+                    key={`${logo.name}-${idx}`}
+                    className="flex items-center justify-center h-14 px-6 rounded-xl bg-surface-container-lowest/70 hover:bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/40 shadow-xs hover:shadow-md transition-all duration-300 group"
+                  >
+                    <Image
+                      src={logo.src}
+                      alt={logo.name}
+                      width={logo.width}
+                      height={logo.height}
+                      className="h-6 sm:h-7 w-auto object-contain opacity-70 grayscale contrast-125 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
         </div>
