@@ -10,7 +10,8 @@
   "dependencies": {
     "next": "^15.1.7",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "resend": "^6.26.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",

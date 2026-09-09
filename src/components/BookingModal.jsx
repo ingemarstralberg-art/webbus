@@ -36,6 +36,8 @@ export default function BookingModal() {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState('');
+
 
 
   useEffect(() => {
@@ -54,19 +56,59 @@ export default function BookingModal() {
 
 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
 
     e.preventDefault();
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    setErrorMessage('');
 
-      setIsSubmitting(false);
+
+
+    try {
+
+      const res = await fetch('/api/booking', {
+
+        method: 'POST',
+
+        headers: {
+
+          'Content-Type': 'application/json',
+
+        },
+
+        body: JSON.stringify(formData),
+
+      });
+
+
+
+      const data = await res.json();
+
+
+
+      if (!res.ok) {
+
+        throw new Error(data.error || 'Kunde inte skicka bokningsförfrågan.');
+
+      }
+
+
 
       setIsSubmitted(true);
 
-    }, 600);
+    } catch (err) {
+
+      console.error('Booking submission error:', err);
+
+      setErrorMessage(err.message || 'Ett oväntat fel uppstod. Vänligen försök igen eller maila oss på kontakt@webbus.se');
+
+    } finally {
+
+      setIsSubmitting(false);
+
+    }
 
   };
 
@@ -75,6 +117,8 @@ export default function BookingModal() {
   const handleReset = () => {
 
     setIsSubmitted(false);
+
+    setErrorMessage('');
 
     setFormData({
 
@@ -201,6 +245,12 @@ export default function BookingModal() {
           ) : (
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {errorMessage && (
+                <div className="p-3 rounded-lg bg-error/10 border border-error/30 text-error text-body-sm flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">error</span>
+                  <span>{errorMessage}</span>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
