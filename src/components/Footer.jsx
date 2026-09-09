@@ -241,7 +241,7 @@ export default function Footer() {
 
                 <span className="material-symbols-outlined text-[16px] text-primary mt-0.5">location_on</span>
 
-                <span>Mäster Palmsgatan 18A, 981 35 Kiruna</span>
+                <span>Mäster Palmsgatan 18A, 981 37 Kiruna</span>
 
               </li>
 

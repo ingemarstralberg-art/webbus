@@ -62,6 +62,6 @@ Webbus hjälper företag att gå från AI-hype till mätbar produktivitet genom 
 ## 🏢 Kontakt
 
 - **Företag:** Webbus
-- **Plats:** Mäster Palmsgatan 18A, 981 35 Kiruna
+- **Plats:** Mäster Palmsgatan 18A, 981 37 Kiruna
 - **Telefon:** +46 737 360489
 - **E-post:** [kontakt@webbus.se](mailto:kontakt@webbus.se)

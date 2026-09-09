@@ -234,7 +234,7 @@ export default function ContactPage() {
 
               <p className="text-body-sm text-on-surface">Mäster Palmsgatan 18A</p>
 
-              <p className="text-body-sm text-on-surface-variant">981 35 Kiruna, Sverige</p>
+              <p className="text-body-sm text-on-surface-variant">981 37 Kiruna, Sverige</p>
 
             </div>
 
