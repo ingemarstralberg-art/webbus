@@ -10,6 +10,8 @@ import BookingModal from '../components/BookingModal';
 
 import RemoteSupportModal from '../components/RemoteSupportModal';
 
+import CookieConsent from '../components/CookieConsent';
+
 
 
 export const metadata = {
@@ -77,6 +79,8 @@ export default function RootLayout({ children }) {
           <BookingModal />
 
           <RemoteSupportModal />
+
+          <CookieConsent />
 
         </ModalProvider>
 

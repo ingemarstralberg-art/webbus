@@ -13,8 +13,7 @@ import { useModal } from '../context/ModalContext';
 
 
 export default function Footer() {
-
-  const { openBooking, openRemoteSupport } = useModal();
+  const { openBooking, openRemoteSupport, openCookieSettings } = useModal();
 
 
 
@@ -292,7 +291,16 @@ export default function Footer() {
 
           <p>© 2026 Webbus. Alla rättigheter förbehållna. Byggd med Next.js och Google Stitch Design.</p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              onClick={openCookieSettings}
+              className="hover:text-primary transition-colors inline-flex items-center gap-1 text-on-surface-variant hover:underline underline-offset-2"
+            >
+              <span className="material-symbols-outlined text-[14px]">cookie</span>
+              <span>Cookie-inställningar</span>
+            </button>
+
+            <span>·</span>
 
             <Link href="/kontakt" className="hover:text-on-surface transition-colors">Integritet & GDPR</Link>
 
