@@ -1,39 +1,154 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
+// Simple in-memory rate limiter (sliding window)
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_REQUESTS_PER_WINDOW = 5;
+
+// Periodically clean up stale entries to prevent memory growth
+if (typeof setInterval !== 'undefined') {
+  const cleanupTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [ip, record] of rateLimitMap.entries()) {
+      if (now - record.startTime > RATE_LIMIT_WINDOW_MS) {
+        rateLimitMap.delete(ip);
+      }
+    }
+  }, 10 * 60 * 1000);
+  if (cleanupTimer.unref) cleanupTimer.unref();
+}
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  if (!record || now - record.startTime > RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, startTime: now });
+    return { allowed: true };
+  }
+  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+    const resetSeconds = Math.ceil((record.startTime + RATE_LIMIT_WINDOW_MS - now) / 1000);
+    return { allowed: false, resetSeconds };
+  }
+  record.count += 1;
+  return { allowed: true };
+}
+
+// Security: Escape HTML characters to prevent Email HTML injection & XSS
+function escapeHtml(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Security: Remove carriage returns and newlines from single-line fields to prevent header injection
+function sanitizeSingleLine(str, maxLength = 100) {
+  if (!str || typeof str !== 'string') return '';
+  return str.replace(/[\r\n\t]/g, ' ').trim().slice(0, maxLength);
+}
+
+// RFC-compliant standard email format check
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
 export async function POST(request) {
   try {
+    // 1. IP Rate Limiting
+    const forwarded = request.headers.get('x-forwarded-for');
+    const clientIp = forwarded ? forwarded.split(',')[0].trim() : (request.headers.get('x-real-ip') || '127.0.0.1');
+    const { allowed, resetSeconds } = checkRateLimit(clientIp);
+
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error: `För många förfrågningar. Vänligen vänta ${Math.ceil((resetSeconds || 60) / 60)} minuter innan du försöker igen.`,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(resetSeconds || 60),
+          },
+        }
+      );
+    }
+
     const apiKey = process.env.RESEND_API_KEY;
 
     if (!apiKey) {
       console.error('RESEND_API_KEY is not configured');
-
       return NextResponse.json(
         {
-          error:
-            'E-posttjänsten är inte konfigurerad (saknar RESEND_API_KEY).',
+          error: 'E-posttjänsten är inte konfigurerad (saknar RESEND_API_KEY).',
         },
         { status: 500 }
       );
     }
 
-    const resend = new Resend(apiKey);
-    const body = await request.json();
-    const { name, email, phone, company, topic, preferredDate, preferredTime, notes } = body;
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Ogiltigt JSON-anrop.' }, { status: 400 });
+    }
 
-    if (!name || !email) {
+    // 2. Bot Protection (Honeypot field)
+    // If the hidden 'website' field is filled, silently succeed without sending email
+    if (body.website && String(body.website).trim() !== '') {
+      console.warn(`Spambot detected from ${clientIp}, honeypot triggered.`);
+      return NextResponse.json({ success: true, id: 'filtered_bot' });
+    }
+
+    // 3. Validation & Sanitization
+    const rawName = typeof body.name === 'string' ? body.name : '';
+    const rawEmail = typeof body.email === 'string' ? body.email : '';
+
+    if (!rawName.trim() || !rawEmail.trim()) {
       return NextResponse.json(
         { error: 'Namn och e-postadress är obligatoriska fält.' },
         { status: 400 }
       );
     }
 
+    const cleanEmail = sanitizeSingleLine(rawEmail, 254);
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return NextResponse.json(
+        { error: 'Vänligen ange en giltig e-postadress.' },
+        { status: 400 }
+      );
+    }
+
+    const cleanName = sanitizeSingleLine(rawName, 100);
+    const cleanPhone = sanitizeSingleLine(body.phone, 30);
+    const cleanCompany = sanitizeSingleLine(body.company, 100);
+    const cleanTopic = sanitizeSingleLine(body.topic, 100) || 'AI-produktivitet & Arbetsflöden';
+    const cleanDate = sanitizeSingleLine(body.preferredDate, 20);
+    const cleanTime = sanitizeSingleLine(body.preferredTime, 10) || '10:00';
+    const cleanNotes = typeof body.notes === 'string' ? body.notes.slice(0, 2000) : '';
+
+    const formattedDate = cleanDate
+      ? `${cleanDate} kl ${cleanTime}`
+      : `Snarast möjligt (kl ${cleanTime})`;
+
+    // Escaped versions for safe HTML rendering
+    const safeName = escapeHtml(cleanName);
+    const safeEmail = escapeHtml(cleanEmail);
+    const safePhone = escapeHtml(cleanPhone) || 'Ej angivet';
+    const safeCompany = escapeHtml(cleanCompany) || 'Ej angivet';
+    const safeTopic = escapeHtml(cleanTopic);
+    const safeFormattedDate = escapeHtml(formattedDate);
+    const safeNotesHtml = cleanNotes
+      ? escapeHtml(cleanNotes).replace(/\n/g, '<br>')
+      : '<em>Inga ytterligare anteckningar angavs.</em>';
+
     const recipient = process.env.RESEND_TO_EMAIL || 'kontakt@webbus.se';
     const sender = process.env.RESEND_FROM_EMAIL || 'Webbus Bokning <kontakt@webbus.se>';
 
-    const formattedDate = preferredDate ? `${preferredDate} kl ${preferredTime || '10:00'}` : `Snarast möjligt (kl ${preferredTime || '10:00'})`;
+    const resend = new Resend(apiKey);
 
-    // Email to Webbus (kontakt@webbus.se)
+    // Email to Webbus admin (kontakt@webbus.se)
     const adminEmailContent = `
       <!DOCTYPE html>
       <html>
@@ -65,38 +180,38 @@ export async function POST(request) {
               <span class="badge">Ny bokning</span>
               <div class="detail-row">
                 <span class="detail-label">Kontaktperson:</span>
-                <span class="detail-value"><strong>${name}</strong></span>
+                <span class="detail-value"><strong>${safeName}</strong></span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">E-postadress:</span>
-                <span class="detail-value"><a href="mailto:${email}" style="color: #0284c7; text-decoration: none;">${email}</a></span>
+                <span class="detail-value"><a href="mailto:${safeEmail}" style="color: #0284c7; text-decoration: none;">${safeEmail}</a></span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">Telefonnummer:</span>
-                <span class="detail-value">${phone || 'Ej angivet'}</span>
+                <span class="detail-value">${safePhone}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">Företag / Org:</span>
-                <span class="detail-value">${company || 'Ej angivet'}</span>
+                <span class="detail-value">${safeCompany}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">Diskussionsområde:</span>
-                <span class="detail-value"><strong>${topic || 'Allmänt'}</strong></span>
+                <span class="detail-value"><strong>${safeTopic}</strong></span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">Önskad tidpunkt:</span>
-                <span class="detail-value"><strong>${formattedDate}</strong></span>
+                <span class="detail-value"><strong>${safeFormattedDate}</strong></span>
               </div>
               
               <div style="margin-top: 20px;">
                 <span class="detail-label" style="display: block; margin-bottom: 6px;">Beskrivning / Anteckningar:</span>
                 <div class="notes-box">
-                  ${notes ? notes.replace(/\n/g, '<br>') : '<em>Inga ytterligare anteckningar angavs.</em>'}
+                  ${safeNotesHtml}
                 </div>
               </div>
 
               <div style="text-align: center;">
-                <a href="mailto:${email}?subject=Sv:%20Mötesbokning%20Webbus&body=Hej%20${encodeURIComponent(name)},%0A%0ATack%20för%20din%20mötesförfrågan!" class="reply-btn">Svara direkt via e-post</a>
+                <a href="mailto:${safeEmail}?subject=Sv:%20Mötesbokning%20Webbus&body=Hej%20${encodeURIComponent(cleanName)},%0A%0ATack%20för%20din%20mötesförfrågan!" class="reply-btn">Svara direkt via e-post</a>
               </div>
             </div>
             <div class="footer">
@@ -107,13 +222,15 @@ export async function POST(request) {
       </html>
     `;
 
+    const subjectLine = `Ny mötesbokning: ${cleanName}${cleanCompany ? ` (${cleanCompany})` : ''}`;
+
     const { data, error } = await resend.emails.send({
       from: sender,
       to: [recipient],
-      replyTo: email,
-      subject: `Ny mötesbokning: ${name}${company ? ` (${company})` : ''}`,
+      replyTo: cleanEmail,
+      subject: subjectLine,
       html: adminEmailContent,
-      text: `Ny mötesbokning mottagen:\n\nNamn: ${name}\nE-post: ${email}\nTelefon: ${phone || 'Ej angivet'}\nFöretag: ${company || 'Ej angivet'}\nÄmne: ${topic || 'Allmänt'}\nÖnskad tid: ${formattedDate}\n\nMeddelande:\n${notes || 'Inga anteckningar'}\n`,
+      text: `Ny mötesbokning mottagen:\n\nNamn: ${cleanName}\nE-post: ${cleanEmail}\nTelefon: ${cleanPhone || 'Ej angivet'}\nFöretag: ${cleanCompany || 'Ej angivet'}\nÄmne: ${cleanTopic}\nÖnskad tid: ${formattedDate}\n\nMeddelande:\n${cleanNotes || 'Inga anteckningar'}\n`,
     });
 
     if (error) {
@@ -121,11 +238,11 @@ export async function POST(request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Optional confirmation email to client
+    // Confirmation email to client
     try {
       await resend.emails.send({
         from: sender,
-        to: [email],
+        to: [cleanEmail],
         subject: `Bekräftelse: Vi har mottagit din mötesförfrågan – Webbus`,
         html: `
           <!DOCTYPE html>
@@ -145,7 +262,7 @@ export async function POST(request) {
             <body>
               <div class="card">
                 <div class="header">
-                  <h1>Tack för din förfrågan, ${name}!</h1>
+                  <h1>Tack för din förfrågan, ${safeName}!</h1>
                 </div>
                 <div class="content">
                   <p>Vi har tagit emot din förfrågan om ett förutsättningslöst 30-minuters strategisamtal med Webbus.</p>
@@ -153,9 +270,9 @@ export async function POST(request) {
                   
                   <div class="summary">
                     <p style="margin: 0 0 8px 0; font-weight: 600; color: #0f172a;">Sammanfattning av din förfrågan:</p>
-                    <p style="margin: 4px 0;"><strong>Ämne:</strong> ${topic || 'Allmänt'}</p>
-                    <p style="margin: 4px 0;"><strong>Önskad tid:</strong> ${formattedDate}</p>
-                    ${notes ? `<p style="margin: 4px 0;"><strong>Beskrivning:</strong> ${notes}</p>` : ''}
+                    <p style="margin: 4px 0;"><strong>Ämne:</strong> ${safeTopic}</p>
+                    <p style="margin: 4px 0;"><strong>Önskad tid:</strong> ${safeFormattedDate}</p>
+                    ${cleanNotes ? `<p style="margin: 4px 0;"><strong>Beskrivning:</strong> ${safeNotesHtml}</p>` : ''}
                   </div>
 
                   <p>Har du akuta frågor under tiden når du oss alltid direkt på <a href="mailto:kontakt@webbus.se" style="color: #0284c7;">kontakt@webbus.se</a> eller telefon <a href="tel:+46737360489" style="color: #0284c7;">0737-36 04 89</a>.</p>
@@ -169,11 +286,10 @@ export async function POST(request) {
             </body>
           </html>
         `,
-        text: `Hej ${name}!\n\nTack för din mötesförfrågan till Webbus.\nVi har tagit emot dina uppgifter och återkommer inom kort med kalenderinbjudan för:\nÄmne: ${topic}\nÖnskad tid: ${formattedDate}\n\nHar du akuta frågor når du oss på kontakt@webbus.se eller 0737-36 04 89.\n\nVänliga hälsningar,\nIngemar Strålberg\nWebbus (kontakt@webbus.se)\n`
+        text: `Hej ${cleanName}!\n\nTack för din mötesförfrågan till Webbus.\nVi har tagit emot dina uppgifter och återkommer inom kort med kalenderinbjudan för:\nÄmne: ${cleanTopic}\nÖnskad tid: ${formattedDate}\n\nHar du akuta frågor når du oss på kontakt@webbus.se eller 0737-36 04 89.\n\nVänliga hälsningar,\nIngemar Strålberg\nWebbus (kontakt@webbus.se)\n`,
       });
     } catch (confError) {
       console.warn('Could not send confirmation email to client:', confError);
-      // We do not fail the overall booking if only the client copy fails
     }
 
     return NextResponse.json({ success: true, id: data?.id });
